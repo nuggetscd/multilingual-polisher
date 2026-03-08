@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>多语言文本润色工具</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 36px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #1a1a1a;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+
+    textarea:focus { border-color: #5b6af5; }
+
+    .options-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .option-group { flex: 1; }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-option {
+      padding: 7px 16px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 20px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #555;
+    }
+
+    .btn-option:hover { border-color: #5b6af5; color: #5b6af5; }
+
+    .btn-option.active {
+      background: #5b6af5;
+      border-color: #5b6af5;
+      color: white;
+      font-weight: 600;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: #5b6af5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 24px;
+    }
+
+    .submit-btn:hover { background: #4a59e0; }
+    .submit-btn:disabled { background: #b0b7f8; cursor: not-allowed; }
+
+    .result-box {
+      background: #f8f9ff;
+      border: 1.5px solid #e8eaff;
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 80px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .result-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .loading { color: #888; font-style: italic; }
+
+    .copy-btn {
+      margin-top: 10px;
+      padding: 6px 14px;
+      background: white;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #555;
+      display: none;
+    }
+
+    .copy-btn:hover { border-color: #5b6af5; color: #5b6af5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✍️ 多语言文本润色工具</h1>
+    <p class="subtitle">Multilingual Text Polisher · Outil de réécriture multilingue</p>
+
+    <label>输入文本</label>
+    <textarea id="inputText" placeholder="在这里输入你想润色的文字..."></textarea>
+
+    <div class="options-row">
+      <div class="option-group">
+        <label>目标语言</label>
+        <div class="btn-group" id="langGroup">
+          <button class="btn-option active" data-value="中文">中文</button>
+          <button class="btn-option" data-value="English">English</button>
+          <button class="btn-option" data-value="Français">Français</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <label>输出风格</label>
+        <div class="btn-group" id="styleGroup">
+          <button class="btn-option active" data-value="正式">正式</button>
+          <button class="btn-option" data-value="口语">口语</button>
+          <button class="btn-option" data-value="小红书风">小红书风 🍠</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="polish()">开始润色</button>
+
+    <div class="result-label" id="resultLabel">润色结果</div>
+    <div class="result-box" id="resultBox"></div>
+    <button class="copy-btn" id="copyBtn" onclick="copyResult()">复制结果</button>
+  </div>
+
+  <script>
+    // 按钮组单选逻辑
+    document.querySelectorAll('.btn-group').forEach(group => {
+      group.querySelectorAll('.btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          group.querySelectorAll('.btn-option').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+    });
+
+    function getSelected(groupId) {
+      return document.querySelector(`#${groupId} .btn-option.active`)?.dataset.value;
+    }
+
+    async function polish() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) { alert('请先输入文字！'); return; }
+
+      const lang = getSelected('langGroup');
+      const style = getSelected('styleGroup');
+
+      const submitBtn = document.getElementById('submitBtn');
+      const resultBox = document.getElementById('resultBox');
+      const resultLabel = document.getElementById('resultLabel');
+      const copyBtn = document.getElementById('copyBtn');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '润色中...';
+      resultLabel.style.display = 'block';
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '<span class="loading">AI 正在润色，请稍候...</span>';
+      copyBtn.style.display = 'none';
+
+      try {
+        const response = await fetch('/polish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, target_language: lang, style })
+        });
+
+        const data = await response.json();
+        resultBox.textContent = data.result;
+        copyBtn.style.display = 'inline-block';
+      } catch (err) {
+        resultBox.textContent = '请求失败，请检查后端是否正在运行。';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '开始润色';
+      }
+    }
+
+    function copyResult() {
+      const text = document.getElementById('resultBox').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => btn.textContent = '复制结果', 1500);
+      });
+    }
+  </script>
+</body>
+</html>
