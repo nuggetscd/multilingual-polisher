@@ -3,11 +3,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import httpx
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
-# DeepSeek API配置
-DEEPSEEK_API_KEY = "sk-c97eb60430b84a40b99efaa503930001"
+# DeepSeek API配置（从.env读取，不要直接写key！）
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 MODEL = "deepseek-chat"
 
